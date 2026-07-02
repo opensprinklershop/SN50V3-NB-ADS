@@ -51,6 +51,14 @@ Ein SMT50 belegt je **2 ADS1115-Kanäle** (ein Analogausgang für Feuchte, einer
 
 Die Rohwerte werden zusätzlich als `ads1115_a0_mv … a3_mv` mitgesendet. Die Temperatur-Formel `(mV − 500) / 10` entspricht dem Truebner SMT50 (0,5 V = 0 °C, +10 mV/°C). Die Feuchte ist linear als `mV / 60` implementiert (3000 mV → 50 % VWC).
 
+### Montage & Inbetriebnahme
+
+1. **Platine ausbauen:** Schrauben Sie die Hauptplatine aus dem Gehäuse, um ausreichend Platz für das Anklemmen der Sensoradern zu haben.
+2. **Verkabeln:** Führen Sie die Sensorkabel des SMT50 durch die PG-Verschraubungen **und durch die Zweier-Dichtung**, die sich in der Packung befindet, und schließen Sie die Adern an den Schraubklemmen der Zusatzplatine an.
+3. **Platine einbauen:** Platine wieder sicher im Gehäuse verschrauben. Je nach Platz eventuell nur mit 2 Schrauben.
+4. **SIM-Karte einsetzen:** Setzen Sie die SIM-Karte ein.
+5. **Stromversorgung aktivieren:** Setzen Sie den gelben Jumper (Power) auf der Platine, um das Gerät mit der Batterie zu verbinden.
+
 ---
 
 ## 3. MQTT JSON Payload Struktur (`AT+CFGMOD=12`)
