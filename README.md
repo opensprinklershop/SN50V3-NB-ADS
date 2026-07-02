@@ -31,6 +31,26 @@ Der ADS1115 wird an den internen bzw. externen 11-poligen Anschluss des SN50V3-N
 | **9** | PA0 (ADC3) | - | Freier analoger Eingang 3 (Klemme beschriftet mit "PA8") |
 | **11**| **GND** | **GND & ADDR**| Masse & I2C-Adresse (ADDR auf GND = `0x48`) |
 
+### Anschlussbild SMT50
+
+![SMT50 Anschluss am ADS1115](ADS1115-CON.png)
+
+### SMT50 Kanalzuordnung
+
+Ein SMT50 belegt je **2 ADS1115-Kanäle** (ein Analogausgang für Feuchte, einer für Temperatur). Die Umrechnung in die MQTT-Felder erfolgt direkt in der Firmware (`Drivers/BSP/src/nb_payload.c`):
+
+| MQTT-Feld | ADS1115-Kanal | Formel |
+| :--- | :---: | :--- |
+| `smt50_1_moisture_vwc` | **A0** | VWC % = mV / 60 |
+| `smt50_1_temp_c` | **A1** | °C = (mV − 500) / 10 |
+| `smt50_2_moisture_vwc` | **A2** | VWC % = mV / 60 |
+| `smt50_2_temp_c` | **A3** | °C = (mV − 500) / 10 |
+
+*   **SMT50 #1** → A0 = Feuchte, A1 = Temperatur
+*   **SMT50 #2** → A2 = Feuchte, A3 = Temperatur
+
+Die Rohwerte werden zusätzlich als `ads1115_a0_mv … a3_mv` mitgesendet. Die Temperatur-Formel `(mV − 500) / 10` entspricht dem Truebner SMT50 (0,5 V = 0 °C, +10 mV/°C). Die Feuchte ist linear als `mV / 60` implementiert (3000 mV → 50 % VWC).
+
 ---
 
 ## 3. MQTT JSON Payload Struktur (`AT+CFGMOD=12`)
