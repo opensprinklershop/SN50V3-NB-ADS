@@ -25,10 +25,10 @@ Der ADS1115 wird an den internen bzw. externen 11-poligen Anschluss des SN50V3-N
 | Klemme (Pin) | Bezeichnung | ADS1115 Pin | Beschreibung |
 | :---: | :--- | :---: | :--- |
 | **2** | **+5V geschaltet** | **VDD / VCC** | Betriebsspannung ADS1115 |
-| **3** | PA4 (ADC1) | - | Freier analoger Eingang 1 (0..3.3V) |
+| **3** | PA4 (ADC1) | - | Analogeingang für SMT50-Temperatur (max. 1.1V nutzbar) |
 | **4** | **SCL** | **SCL** | I2C Clock (PB6 oder PB8) |
 | **5** | **SDA** | **SDA** | I2C Data (PB7 oder PB9) |
-| **9** | PA0 (ADC3) | - | Freier analoger Eingang 3 (Klemme beschriftet mit "PA8") |
+| **9** | PA0 (ADC3) | - | Analogeingang für SMT50-Temperatur (max. 1.1V nutzbar, Klemme beschriftet mit "PA8") |
 | **11**| **GND** | **GND & ADDR**| Masse & I2C-Adresse (ADDR auf GND = `0x48`) |
 
 ### Anschlussbild SMT50
@@ -50,6 +50,10 @@ Ein SMT50 belegt je **2 ADS1115-Kanäle** (ein Analogausgang für Feuchte, einer
 *   **SMT50 #2** → A2 = Feuchte, A3 = Temperatur
 
 Die Rohwerte werden zusätzlich als `ads1115_a0_mv … a3_mv` mitgesendet. Die Temperatur-Formel `(mV − 500) / 10` entspricht dem Truebner SMT50 (0,5 V = 0 °C, +10 mV/°C). Die Feuchte ist linear als `mV / 60` implementiert (3000 mV → 50 % VWC).
+
+> **Wichtige Änderung (PA4/PA8-Klemme):** Die internen Eingänge für `adc1` und `adc3` sind nur bis **1.1V** nutzbar. Für SMT50 dürfen diese Eingänge daher nur für den Temperaturkanal verwendet werden (typisch 0.2..1.0V). Für SMT50-Bodenfeuchte (bis 3V) muss auf ADS1115-Kanäle umgeklemmt werden.
+
+> **Hinweis für erweiterte SMT50-Konfigurationen:** Für detaillierte Dokumentation zu 2x, 3x und 4x SMT50-Anschlüssen mit kompletten JavaScript-Decodern und erweiterten Verkabelungsschemas siehe auch das Schwester-Projekt [SN50V3-LS](https://github.com/OpenSprinklerShop/SN50V3-LS-ADS) (Abschnitte 2.1–2.3 sowie 3.1–3.3).
 
 ### Montage & Inbetriebnahme
 
@@ -74,8 +78,8 @@ Bei der Übertragung via MQTT (`AT+PRO=3,5`) sendet das Gerät ein JSON-Objekt m
   "battery": 3.61,
   "signal": 18,
   "time": "2026/06/05 23:15:00",
-  "adc1": 1200,
-  "adc3": 2400,
+  "adc1": 900,
+  "adc3": 900,
   "ads1115_a0_mv": 1800,
   "ads1115_a1_mv": 900,
   "ads1115_a2_mv": 0,
@@ -89,7 +93,7 @@ Bei der Übertragung via MQTT (`AT+PRO=3,5`) sendet das Gerät ein JSON-Objekt m
 
 ### JSON-Felderbeschreibung:
 *   `battery`: Batteriespannung (V)
-*   `adc1` / `adc3`: Interne MCU Analogwerte (mV)
+*   `adc1` / `adc3`: Interne MCU Analogwerte (mV, SMT50 nur Temperatur, max. 1.1V)
 *   `ads1115_a0_mv` bis `_a3_mv`: Gemessene Spannungen am ADS1115 (mV)
 *   `smt50_1_moisture_vwc` / `smt50_2_moisture_vwc`: Bodenfeuchtigkeit in % Volumetric Water Content (skaliert: 0..3V entspricht 0..50% VWC)
 *   `smt50_1_temp_c` / `smt50_2_temp_c`: Bodentemperatur in °C (skaliert: 0..3V entspricht -40 °C bis +60 °C)
