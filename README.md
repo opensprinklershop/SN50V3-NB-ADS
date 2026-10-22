@@ -127,3 +127,22 @@ STM32_Programmer_CLI.exe -c port=COM3 br=115200 parity=EVEN -d build/NBSN95.bin 
 3. Flashen ausführen.
 4. SW1 zurück auf **Normal** schieben.
 5. USB-Kabel trennen und wieder anschließen → Das Gerät bootet die neue Firmware.
+
+### C. Nach dem ersten Flashen: Passwort & Konfiguration
+
+> **Achtung – das Gerätepasswort ändert sich!** Diese Firmware legt den Konfigurationsbereich im Flash an eine andere Adresse als die Original-Dragino-Firmware (Page 1280 statt 1200, für mehr Firmware-Platz). Beim ersten Start über einer Original-Firmware findet sie dort kein gültiges Passwort und setzt das AT-Passwort fest auf:
+>
+> **`377612`**
+>
+> Das Passwort vom Geräte-Aufkleber gilt danach **nicht mehr** – weder an der USB-Konsole noch über Bluetooth (BLE-Name = IMEI).
+
+Gleichzeitig gehen **alle bisherigen Einstellungen** verloren (MQTT-Server, Benutzer/Passwort, Topics, `TDC`, `CFGMOD`, `PRO`, DNS, NTP). Das Gerät muss nach dem ersten Flashen komplett neu konfiguriert werden. Bei späteren Updates von einer Version dieser Firmware auf eine neuere bleiben Passwort und Einstellungen erhalten.
+
+Da `377612` öffentlich bekannt ist und auf allen umgeflashten Geräten gleich lautet, sollte direkt nach dem Flashen ein eigenes Passwort gesetzt werden:
+
+```
+377612
+AT+PWORD=<neues Passwort, max. 8 Zeichen>
+```
+
+Danach z. B. `AT+CFGMOD=12`, `AT+PRO=3,5` sowie die MQTT-Parameter neu setzen (siehe Abschnitt 3).
