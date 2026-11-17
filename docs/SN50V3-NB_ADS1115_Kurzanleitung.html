@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>SN50V3-NB mit ADS1115 – Kurzanleitung</title>
+<style>
+  @page { size: A4; margin: 0; }
+  :root {
+    --ink: #16242b; --muted: #55666e; --green: #0b6e5f; --green-dark: #0a4d43;
+    --line: #cfd9dc; --head: #e6f2ef; --code: #eef2f3;
+    --warn-bg: #fff4df; --warn-bar: #e9a23b; --warn-ink: #9a5a0c;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #fff; }
+  body {
+    font-family: Carlito, Calibri, "Segoe UI", sans-serif;
+    color: var(--ink); font-size: 9.5pt; line-height: 1.38;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .page { width: 210mm; height: 297mm; padding: 11mm 12mm 9mm; display: flex; flex-direction: column; }
+  code, .mono { font-family: "DejaVu Sans Mono", Consolas, monospace; font-size: 7.5pt; }
+  code { background: var(--code); padding: 0 2.5pt; border-radius: 2pt; }
+  b { font-weight: 700; }
+
+  header { display: flex; justify-content: space-between; align-items: flex-end;
+           border-bottom: 1.5pt solid var(--green); padding-bottom: 7pt; }
+  .kicker { color: var(--green); font-weight: 700; font-size: 8pt; letter-spacing: .9pt; text-transform: uppercase; }
+  h1 { margin: 3pt 0 2pt; font-size: 21pt; line-height: 1.1; }
+  .sub { color: var(--muted); font-size: 9.5pt; }
+  .meta { text-align: right; color: var(--muted); font-size: 8pt; line-height: 1.45; }
+  .meta b { color: var(--ink); font-size: 10pt; display: block; margin-bottom: 2pt; }
+
+  .warn { background: var(--warn-bg); border-left: 3pt solid var(--warn-bar);
+          margin-top: 7pt; padding: 7pt 12pt 6pt 12pt; }
+  .warn h2 { margin: 0 0 2pt; font-size: 10.6pt; color: var(--warn-ink); }
+  .warn p { margin: 0 0 3pt; }
+  .warn ul { columns: 2; column-gap: 16pt; margin: 3pt 0 0; padding-left: 13pt; }
+  .warn li { break-inside: avoid; margin-bottom: 2pt; }
+
+  .cols { display: grid; grid-template-columns: 1fr 1fr; column-gap: 15pt; margin-top: 8pt; flex: 1; }
+  h3 { display: flex; align-items: center; gap: 5pt; color: var(--green);
+       font-size: 10.6pt; margin: 9pt 0 3pt; }
+  .col > h3:first-child { margin-top: 0; }
+  h3 .n { background: var(--green); color: #fff; width: 13.5pt; height: 13.5pt; border-radius: 50%;
+          display: inline-flex; align-items: center; justify-content: center; font-size: 8pt; flex: none; }
+  ul, ol { margin: 0; padding-left: 13pt; }
+  li { margin-bottom: 1.5pt; }
+  .note { color: var(--muted); font-size: 8pt; line-height: 1.35; margin: 3pt 0 0; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 8.7pt; }
+  th { background: var(--head); color: var(--green-dark); text-align: left; font-weight: 700;
+       border-bottom: .75pt solid var(--green); padding: 2.5pt 5pt; }
+  td { border-bottom: .75pt solid var(--line); padding: 2.5pt 5pt; vertical-align: top; }
+  td code { font-size: 7.3pt; }
+
+  .wires { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4pt; margin: 3pt 0 5pt; }
+  .wire { border: .75pt solid var(--line); border-radius: 2pt; padding: 2.5pt 5pt; font-size: 8pt; line-height: 1.3; }
+  .wire b { display: flex; align-items: center; gap: 3pt; }
+  .dot { width: 6.5pt; height: 6.5pt; border-radius: 50%; border: .6pt solid #6b7b82; display: inline-block; }
+
+  .formula { background: var(--code); margin: 5pt 0; padding: 4pt 7pt; font-size: 8.5pt;
+             display: grid; grid-template-columns: 1fr auto; row-gap: 1pt; }
+  .formula .mono { font-weight: 700; text-align: right; font-size: 8pt; }
+  .console { background: #17262b; color: #e8f1ee; font-family: "DejaVu Sans Mono", Consolas, monospace;
+             font-size: 7.1pt; line-height: 1.38; padding: 5pt 7pt; border-radius: 2pt; margin: 5pt 0 4pt;
+             white-space: pre; }
+  .console i { color: #8fb3aa; font-style: normal; }
+  p { margin: 3pt 0; }
+  .update { background: var(--code); border-left: 2.5pt solid var(--green); padding: 4pt 7pt; margin-top: 7pt;
+            font-size: 8.3pt; line-height: 1.35; }
+  td.c, th.c { white-space: nowrap; }
+
+  footer { border-top: .75pt solid var(--line); padding-top: 7pt; margin-top: 6pt;
+           display: grid; grid-template-columns: 1fr 1fr .72fr; gap: 12pt; align-items: start; }
+  .qr { display: flex; gap: 8pt; }
+  .qr svg { width: 50pt; height: 50pt; flex: none; }
+  .qr b { font-size: 9.5pt; }
+  .qr a { color: var(--green); text-decoration: none; font-family: "DejaVu Sans Mono", Consolas, monospace; font-size: 7.5pt; line-height: 1.3; display: block; margin: 1pt 0 2pt; }
+  .qr span, .fine { color: var(--muted); font-size: 8pt; line-height: 1.35; }
+  .fine a { color: var(--green); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <div>
+    <div class="kicker">Kurzanleitung · NB-IoT-Sensorknoten mit ADS1115-Erweiterung</div>
+    <h1>Dragino SN50V3-NB</h1>
+    <div class="sub">4 zusätzliche 16-Bit-Analogeingänge – Messwerte per MQTT als JSON, vorbereitet für Truebner SMT50</div>
+  </div>
+  <div class="meta"><b>OpenSprinklerShop</b>Firmware: Open Source (GitHub)<br>Stand 10/2026</div>
+</header>
+
+<section class="warn">
+  <h2>Wichtig: Auf Ihrem Gerät läuft eine angepasste Firmware – nicht die Original-Firmware von Dragino</h2>
+  <p>Der SN50V3-NB aus unserem Shop wird mit einer Zusatzplatine (ADS1115) und einer dafür angepassten Open-Source-Firmware geliefert. Das Dragino-Handbuch gilt deshalb nur eingeschränkt:</p>
+  <ul>
+    <li><b>Eigenes Datenformat:</b> Mit <code>AT+CFGMOD=12</code> und <code>AT+PRO=3,5</code> sendet das Gerät ein JSON-Objekt per MQTT – inklusive fertig umgerechneter SMT50-Werte.</li>
+    <li><b>Anderes AT-Passwort:</b> Nach dem ersten Flashen gilt <b><code>377612</code></b> – nicht das Passwort vom Aufkleber (USB und Bluetooth). Bitte sofort mit <code>AT+PWORD</code> ändern.</li>
+    <li><b>Kein Firmware-Update mit Dragino-Dateien:</b> Wird die Original-Firmware aufgespielt, funktionieren die vier Zusatzeingänge nicht mehr.</li>
+    <li><b>Unverändert bleiben</b> NB-IoT-Anbindung (SIM, <code>AT+APN</code>), Sendeintervall <code>AT+TDC</code> und die übrigen AT-Befehle.</li>
+  </ul>
+</section>
+
+<div class="cols">
+<div class="col">
+
+  <h3><span class="n">1</span>Was das Gerät misst</h3>
+  <ul>
+    <li><b>4 Analogkanäle A0–A3</b> am ADS1115 (I²C, Adresse <code>0x48</code>): 16 Bit, Messbereich 0 bis 4,096 V, Ausgabe in mV.</li>
+    <li><b>2 interne Eingänge PA4 und PA8</b> (Klemme 3 / 9): nur bis ca. 1,1 V – beim SMT50 nur für die Temperatur.</li>
+    <li><b>Batteriespannung</b> in V und <b>Signalstärke</b> des Mobilfunknetzes.</li>
+    <li><b>Geschaltete 5 V</b>: Sensoren sind nur während der Messung eingeschaltet – das spart Batterie.</li>
+  </ul>
+  <p class="note"><b>NB</b> = NB-IoT (Modem BC660K-GL): Daten gehen ohne Gateway direkt an Ihren MQTT-Broker, eine NB-IoT-SIM ist erforderlich.</p>
+
+  <h3><span class="n">2</span>Truebner SMT50 anschließen</h3>
+  <div class="wires">
+    <div class="wire"><b><span class="dot" style="background:#7a4a21"></span>Braun</b>+5 V</div>
+    <div class="wire"><b><span class="dot" style="background:#fff"></span>Weiß</b>GND</div>
+    <div class="wire"><b><span class="dot" style="background:#f2cf1d"></span>Gelb</b>Bodenfeuchte</div>
+    <div class="wire"><b><span class="dot" style="background:#2fa84f"></span>Grün</b>Temperatur</div>
+  </div>
+  <table>
+    <tr><th>Sensor</th><th>Gelb (Feuchte)</th><th>Grün (Temp.)</th><th>JSON-Felder</th></tr>
+    <tr><td><b>SMT50 #1</b></td><td>A0</td><td>A1</td><td><code>smt50_1_…</code></td></tr>
+    <tr><td><b>SMT50 #2</b></td><td>A2</td><td>A3</td><td><code>smt50_2_…</code></td></tr>
+  </table>
+  <p class="note">Klemmen der Zusatzplatine: 5V · 5V · GND · GND · A0–A3. Die Bodenfeuchte (bis 3 V) gehört immer an A0–A3.</p>
+
+  <h3><span class="n">3</span>Inbetriebnahme</h3>
+  <ol>
+    <li>Platine ausschrauben, Sensorkabel durch PG-Verschraubung und Zweier-Dichtung (liegt bei) führen.</li>
+    <li>Adern an der Zusatzplatine anklemmen, Platine wieder einbauen (ggf. nur 2 Schrauben).</li>
+    <li>SIM-Karte einsetzen.</li>
+    <li>Gelben Jumper (Power) setzen – das Gerät startet.</li>
+    <li>Per USB-UART MQTT-Zugang konfigurieren (Abschnitt 5).</li>
+  </ol>
+  <div class="update"><b>Firmware-Update</b> nur mit Dateien aus unserem GitHub-Projekt, immer ab <code>0x08007800</code> (sonst ist der Bootloader weg): SW1 auf <b>ISP</b>, USB neu stecken, flashen, SW1 auf <b>Normal</b>, USB neu stecken. Einstellungen bleiben bei Updates dieser Firmware erhalten.</div>
+
+</div>
+<div class="col">
+
+  <h3><span class="n">4</span>Datenformat (MQTT, JSON)</h3>
+  <table>
+    <tr><th>Feld</th><th>Inhalt</th><th>Einheit</th></tr>
+    <tr><td class="c"><code>battery</code> · <code>signal</code></td><td>Batterie · Signalstärke</td><td>V · CSQ</td></tr>
+    <tr><td class="c"><code>adc1</code> · <code>adc3</code></td><td>PA4 · PA8 (max. 1,1 V)</td><td>mV</td></tr>
+    <tr><td class="c"><code>ads1115_a0_mv</code> … <code>a3_mv</code></td><td>ADS1115 A0, A1, A2, A3</td><td>mV</td></tr>
+    <tr><td class="c"><code>smt50_1/2_moisture_vwc</code></td><td>Bodenfeuchte (A0 / A2)</td><td>% VWC</td></tr>
+    <tr><td class="c"><code>smt50_1/2_temp_c</code></td><td>Temperatur (A1 / A3)</td><td>°C</td></tr>
+  </table>
+  <div class="formula">
+    <span>SMT50 Bodenfeuchte</span><span class="mono">% VWC = mV / 60</span>
+    <span>SMT50 Temperatur</span><span class="mono">°C = (mV − 500) / 10</span>
+  </div>
+  <p>Umrechnung <b>direkt im Gerät</b> – kein Payload-Decoder nötig (0–3 V = 0–50 % VWC bzw. −40 bis +60 °C). Dazu kommen <code>IMEI</code>, <code>IMSI</code>, <code>Model</code>, <code>mod</code>, <code>time</code>.</p>
+
+  <h3><span class="n">5</span>Konfiguration am PC (USB-UART, 9600 Baud)</h3>
+  <table>
+    <tr><th>Befehl</th><th>Wirkung</th></tr>
+    <tr><td class="c"><code>377612</code></td><td>Anmelden</td></tr>
+    <tr><td class="c"><code>AT+CFGMOD=12</code> · <code>AT+PRO=3,5</code></td><td>ADS1115-Modus · MQTT/JSON</td></tr>
+    <tr><td class="c"><code>AT+SERVADDR=host,port</code></td><td>MQTT-Broker</td></tr>
+    <tr><td class="c"><code>AT+CLIENT</code> · <code>AT+UNAME</code> · <code>AT+PWD</code></td><td>Client-ID · Benutzer · Passwort</td></tr>
+    <tr><td class="c"><code>AT+PUBTOPIC</code> · <code>AT+SUBTOPIC</code></td><td>Topics Senden / Empfangen</td></tr>
+    <tr><td class="c"><code>AT+GETSENSORVALUE=0</code> / <code>=1</code></td><td>Messen + anzeigen / + senden</td></tr>
+    <tr><td class="c"><code>AT+SMT50=1</code> / <code>=2</code></td><td>Nur SMT50 anzeigen, kein Uplink</td></tr>
+  </table>
+<div class="console">AT+SMT50=2
+<i>[52310]</i>SMT50 #1 Moisture(A0): 30.00 %VWC
+<i>[52311]</i>SMT50 #1 Temp(A1): 40.0 C
+<i>[52311]</i>SMT50 #2 Moisture(A2): 18.01 %VWC
+<i>[52312]</i>SMT50 #2 Temp(A3): 20.9 C</div>
+  <p class="note">Beide Messbefehle zeigen SMT50-Werte in % VWC und °C. Meldung <code>ADS1115 all channels 0</code>: SCL, SDA, +5 V, GND prüfen. <code>ATZ</code> übernimmt Einstellungen, <code>AT+TDC=</code> setzt das Intervall (s).</p>
+
+</div>
+</div>
+
+<footer>
+  <div class="qr"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 33 33" class="segno"><path class="qrline" stroke="#16242b" d="M0 0.5h7m1 0h1m2 0h2m3 0h1m1 0h3m2 0h1m2 0h7m-33 1h1m5 0h1m1 0h2m1 0h1m2 0h1m1 0h2m2 0h5m1 0h1m5 0h1m-33 1h1m1 0h3m1 0h1m6 0h4m1 0h2m2 0h1m1 0h1m1 0h1m1 0h3m1 0h1m-33 1h1m1 0h3m1 0h1m1 0h3m7 0h1m2 0h2m1 0h1m1 0h1m1 0h3m1 0h1m-33 1h1m1 0h3m1 0h1m2 0h1m2 0h2m2 0h3m4 0h2m1 0h1m1 0h3m1 0h1m-33 1h1m5 0h1m2 0h2m2 0h4m1 0h1m2 0h2m1 0h1m1 0h1m5 0h1m-33 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-25 1h1m3 0h1m1 0h6m3 0h2m-25 1h1m1 0h2m1 0h3m2 0h2m2 0h5m1 0h5m1 0h1m2 0h1m1 0h2m-33 1h1m1 0h1m1 0h2m2 0h1m2 0h1m1 0h1m2 0h6m1 0h1m2 0h2m1 0h2m1 0h1m-33 1h1m2 0h9m1 0h1m4 0h1m2 0h1m1 0h1m1 0h1m1 0h3m1 0h2m-32 1h1m3 0h1m3 0h1m1 0h1m3 0h1m1 0h1m2 0h1m1 0h1m2 0h3m1 0h1m2 0h1m-29 1h7m3 0h1m1 0h1m2 0h1m3 0h2m2 0h1m1 0h1m-30 1h1m1 0h1m2 0h1m1 0h1m2 0h2m2 0h1m5 0h2m3 0h1m1 0h1m1 0h3m-29 1h1m2 0h1m1 0h1m3 0h2m3 0h3m1 0h1m2 0h1m1 0h2m-28 1h1m1 0h1m1 0h1m2 0h3m2 0h4m2 0h1m2 0h1m1 0h5m1 0h2m-26 1h2m1 0h2m1 0h1m1 0h1m3 0h2m1 0h4m1 0h2m1 0h3m-30 1h1m1 0h2m2 0h2m3 0h4m2 0h9m1 0h2m-28 1h2m1 0h3m1 0h4m2 0h2m1 0h1m1 0h3m1 0h2m1 0h2m1 0h2m-30 1h3m2 0h1m1 0h2m1 0h1m4 0h3m2 0h5m1 0h1m-27 1h2m2 0h1m2 0h2m1 0h2m1 0h2m7 0h2m1 0h5m-32 1h1m2 0h2m2 0h1m6 0h3m4 0h1m1 0h4m2 0h1m2 0h1m-27 1h3m1 0h1m1 0h4m5 0h1m1 0h1m1 0h4m1 0h3m-32 1h1m1 0h2m3 0h2m1 0h1m2 0h2m2 0h1m4 0h2m1 0h2m1 0h1m1 0h2m-33 1h1m1 0h1m1 0h1m1 0h1m3 0h1m6 0h1m4 0h1m1 0h6m-22 1h1m3 0h5m1 0h3m3 0h1m3 0h2m1 0h1m-32 1h7m1 0h2m2 0h3m1 0h5m1 0h3m1 0h1m1 0h1m-29 1h1m5 0h1m1 0h1m2 0h1m2 0h1m2 0h2m1 0h5m3 0h4m-32 1h1m1 0h3m1 0h1m4 0h3m2 0h4m2 0h7m1 0h3m-33 1h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m2 0h5m3 0h1m4 0h1m-33 1h1m1 0h3m1 0h1m1 0h4m1 0h1m1 0h2m1 0h1m3 0h1m3 0h2m2 0h1m-31 1h1m5 0h1m4 0h1m1 0h2m2 0h1m4 0h1m3 0h4m2 0h1m-33 1h7m1 0h2m2 0h1m4 0h3m1 0h1m1 0h1m1 0h1m2 0h1m1 0h1"/></svg>
+<div><b>SN50V3-NB (NB-IoT)</b><a href="https://github.com/OpenSprinklerShop/SN50V3-NB-ADS">github.com/OpenSprinklerShop/<br>SN50V3-NB-ADS</a><span>Quellcode, README, Flash-Anleitung</span></div></div>
+  <div class="qr"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 33 33" class="segno"><path class="qrline" stroke="#16242b" d="M0 0.5h7m2 0h2m1 0h3m2 0h2m3 0h1m3 0h7m-33 1h1m5 0h1m1 0h3m1 0h1m3 0h1m1 0h1m3 0h1m3 0h1m5 0h1m-33 1h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m6 0h1m4 0h1m1 0h3m1 0h1m-33 1h1m1 0h3m1 0h1m1 0h1m1 0h1m3 0h3m1 0h1m1 0h1m3 0h1m1 0h1m1 0h3m1 0h1m-33 1h1m1 0h3m1 0h1m4 0h1m1 0h4m3 0h3m3 0h1m1 0h3m1 0h1m-33 1h1m5 0h1m2 0h1m4 0h2m3 0h1m1 0h1m4 0h1m5 0h1m-33 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-25 1h1m2 0h2m2 0h2m2 0h2m-21 1h1m5 0h1m1 0h2m2 0h3m2 0h1m1 0h2m2 0h1m1 0h2m2 0h3m-32 1h1m2 0h3m3 0h3m1 0h3m1 0h3m2 0h2m4 0h3m-29 1h1m1 0h4m1 0h1m2 0h4m1 0h1m2 0h1m3 0h3m1 0h1m1 0h2m-31 1h1m2 0h1m2 0h1m1 0h1m1 0h3m1 0h6m1 0h1m1 0h1m1 0h7m-33 1h1m1 0h1m2 0h2m1 0h1m1 0h4m3 0h1m2 0h1m1 0h1m1 0h5m2 0h2m-31 1h2m1 0h1m2 0h1m1 0h3m4 0h2m2 0h1m1 0h5m3 0h2m-33 1h2m2 0h1m1 0h1m2 0h2m1 0h1m2 0h3m4 0h1m2 0h2m1 0h1m1 0h2m-32 1h1m1 0h1m4 0h1m2 0h1m2 0h1m2 0h1m1 0h1m1 0h1m1 0h4m2 0h3m1 0h1m-33 1h1m1 0h2m2 0h2m4 0h4m6 0h1m1 0h2m1 0h2m3 0h1m-33 1h1m2 0h2m3 0h1m1 0h1m3 0h3m3 0h2m1 0h1m2 0h1m2 0h3m-31 1h1m1 0h1m1 0h2m1 0h1m1 0h1m1 0h2m1 0h1m1 0h3m1 0h1m1 0h2m1 0h2m1 0h2m1 0h1m-32 1h1m1 0h1m3 0h3m1 0h1m1 0h1m5 0h2m1 0h1m2 0h1m2 0h3m1 0h1m-32 1h3m2 0h2m1 0h2m7 0h2m1 0h2m6 0h1m-30 1h1m8 0h2m1 0h1m1 0h1m5 0h1m1 0h4m1 0h3m-30 1h1m1 0h2m1 0h2m1 0h6m3 0h2m1 0h1m3 0h2m2 0h2m1 0h1m-32 1h1m1 0h1m6 0h2m2 0h4m2 0h1m2 0h2m1 0h6m1 0h1m-33 1h2m3 0h4m4 0h2m1 0h1m2 0h2m2 0h6m2 0h2m-25 1h2m1 0h1m3 0h3m1 0h1m3 0h2m3 0h1m1 0h3m-33 1h7m2 0h1m5 0h1m1 0h1m2 0h2m1 0h2m1 0h1m1 0h1m1 0h2m-32 1h1m5 0h1m3 0h2m3 0h4m4 0h2m3 0h5m-33 1h1m1 0h3m1 0h1m2 0h1m5 0h2m2 0h4m1 0h6m1 0h1m-32 1h1m1 0h3m1 0h1m4 0h4m3 0h1m1 0h2m1 0h3m1 0h2m1 0h3m-33 1h1m1 0h3m1 0h1m2 0h1m2 0h1m1 0h2m1 0h4m2 0h1m1 0h1m1 0h6m-33 1h1m5 0h1m4 0h3m4 0h1m1 0h1m1 0h3m2 0h2m1 0h1m-31 1h7m1 0h1m1 0h1m2 0h1m1 0h3m4 0h3m2 0h1m3 0h1"/></svg>
+<div><b>SN50V3-LS (Schwester-Projekt)</b><a href="https://github.com/OpenSprinklerShop/SN50V3-LS-ADS">github.com/OpenSprinklerShop/<br>SN50V3-LS-ADS</a><span>Schaltungen für 2×, 3×, 4× SMT50</span></div></div>
+  <div class="fine">Allgemeines zum Gerät (NB-IoT, AT-Befehle, Gehäuse): <a href="https://wiki.dragino.com/">Dragino-Wiki SN50V3-NB</a>. Die Firmware steht unter Open-Source-Lizenz, ohne Gewähr.</div>
+</footer>
+
+</div>
+</body>
+</html>
