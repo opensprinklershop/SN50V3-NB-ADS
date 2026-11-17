@@ -6,7 +6,7 @@ TARGET = NBSN95
 BUILD_DIR = build
 
 # Toolchain
-PREFIX = C:/msys64/mingw64/bin/arm-none-eabi-
+PREFIX = C:/msys64/home/schlo/LA66/tools/toolchain/bin/arm-none-eabi-
 CC = $(PREFIX)gcc
 AS = $(PREFIX)gcc -x assembler-with-cpp
 CP = $(PREFIX)objcopy

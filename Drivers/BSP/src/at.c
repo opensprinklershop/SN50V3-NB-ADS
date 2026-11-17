@@ -202,6 +202,24 @@ ATEerror_t at_mod_get(const char *param)
   return AT_OK;
 }
 
+/************** 			AT+SMT50			 **************/
+ATEerror_t at_smt50_set(const char *param)
+{
+	char* pos = strchr(param,'=');
+	if(pos == NULL)
+		return AT_PARAM_ERROR;
+	int mode = atoi(pos+1);
+	if(mode < 1 || mode > 6)
+		return AT_PARAM_ERROR;
+	if(sys.mod != model12)
+	{
+		printf("\r\nSMT50 needs AT+CFGMOD=12 (PA4 + PA0 + ADS1115)\r\n");
+		return AT_ERROR;
+	}
+	SMT50_Measure((uint8_t)mode);
+	return AT_OK;
+}
+
 /************** 			AT+PWORD			 **************/
 ATEerror_t at_pword_set(const char *param)
 {

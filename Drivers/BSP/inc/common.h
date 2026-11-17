@@ -185,6 +185,8 @@ void shtDataClear(void);
 void DatalogPrint(void);
 void DatalogClear(void);
 void get_sensorvalue(void);
+void SMT50_LogDefault(void);
+void SMT50_Measure(uint8_t mode);
 void Entersleep_Write(uint32_t write_sleep);
 #endif 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

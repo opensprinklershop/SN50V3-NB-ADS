@@ -62,6 +62,7 @@
 
 #define NTP    "+NTP"
 #define QCOPS    "+QCOPS"
+#define SMT50    "+SMT50"
 /**********************************************/
 
 typedef enum
@@ -95,6 +96,8 @@ ATEerror_t at_pword_set(const char *param);
 ATEerror_t at_fdr_run(const char *param);
 ATEerror_t at_fdr1_run(const char *param);
 ATEerror_t at_cfg_run(const char *param);
+
+ATEerror_t at_smt50_set(const char *param);
 
 ATEerror_t at_deui_set(const char *param);
 ATEerror_t at_deui_get(const char *param);
@@ -231,6 +234,17 @@ static const struct ATCommand_s ATCommand[] =
 #endif
     .get = at_mod_get,
     .set = at_mod_set,
+    .run = at_return_error,
+  },
+	/** AT+SMT50 **/
+  {
+    .string = AT SMT50,
+		.size_string = sizeof(SMT50) - 1,
+#ifndef NO_HELP
+    .help_string = AT SMT50 "=<1..6> : Measure and print converted Truebner SMT50 values (model 12)",
+#endif
+    .get = at_return_error,
+    .set = at_smt50_set,
     .run = at_return_error,
   },
 	/** AT+DEUI **/	

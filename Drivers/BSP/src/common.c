@@ -17,6 +17,104 @@ uint16_t ads_ch0_global=0;
 uint16_t ads_ch1_global=0;
 uint16_t ads_ch2_global=0;
 uint16_t ads_ch3_global=0;
+
+/* ---------------------------------------------------------------------------
+ * Truebner SMT50: Umrechnung der Rohwerte (mV) fuer die serielle Ausgabe.
+ * Gleiche Formeln wie im MQTT-JSON (nb_payload.c), reine Integer-Arithmetik:
+ *   Feuchte % VWC = U * 50/3     = mV / 60
+ *   Temp    degC  = (U - 0.5)*100 = (mV - 500) / 10
+ * ------------------------------------------------------------------------- */
+static void smt50_log_moisture(uint8_t num, const char *pin, uint16_t mv)
+{
+	int32_t v = ((int32_t)mv * 100) / 60;   /* 1/100 % */
+	user_main_printf("SMT50 #%d Moisture(%s): %d.%02d %%VWC", num, pin, (int)(v / 100), (int)(v % 100));
+}
+
+static void smt50_log_temp(uint8_t num, const char *pin, uint16_t mv)
+{
+	int32_t t = (int32_t)mv - 500;          /* 1/10 degC */
+	if (t < -400 || t > 1000)
+	{
+		user_main_printf("SMT50 #%d Temp(%s): null", num, pin);
+	}
+	else if (t < 0)
+	{
+		user_main_printf("SMT50 #%d Temp(%s): -%d.%d C", num, pin, (int)((-t) / 10), (int)((-t) % 10));
+	}
+	else
+	{
+		user_main_printf("SMT50 #%d Temp(%s): %d.%d C", num, pin, (int)(t / 10), (int)(t % 10));
+	}
+}
+
+/* Standardlayout wie im MQTT-JSON: A0/A1 = SMT50 #1, A2/A3 = SMT50 #2 */
+void SMT50_LogDefault(void)
+{
+	smt50_log_moisture(1, "A0", ads_ch0_global);
+	smt50_log_temp(1, "A1", ads_ch1_global);
+	smt50_log_moisture(2, "A2", ads_ch2_global);
+	smt50_log_temp(2, "A3", ads_ch3_global);
+}
+
+/* AT+SMT50=<1..6>: messen und umgerechnet ausgeben (kein Uplink). Nur model12. */
+void SMT50_Measure(uint8_t mode)
+{
+	uint16_t pa4, pa8;
+
+	HAL_GPIO_WritePin(Power_5v_GPIO_Port, Power_5v_Pin, GPIO_PIN_RESET);
+	HAL_Delay(500 + sys.power_time);
+	pa4 = ADCModel(ADC_CHANNEL_4);
+	pa8 = ADCModel(ADC_CHANNEL_0);
+	MX_I2C1_Init();
+	ads_ch0_global = ADS1115_ReadChannel_mV(0);
+	ads_ch1_global = ADS1115_ReadChannel_mV(1);
+	ads_ch2_global = ADS1115_ReadChannel_mV(2);
+	ads_ch3_global = ADS1115_ReadChannel_mV(3);
+	HAL_I2C_MspDeInit(&hi2c1);
+	HAL_Delay(20);
+	HAL_GPIO_WritePin(Power_5v_GPIO_Port, Power_5v_Pin, GPIO_PIN_SET);
+
+	if ((ads_ch0_global == 0) && (ads_ch1_global == 0) && (ads_ch2_global == 0) && (ads_ch3_global == 0))
+	{
+		user_main_printf("SMT50: ADS1115 all channels 0 (I2C error? check 0x48, SCL, SDA, +5V)");
+	}
+	user_main_printf("SMT50 mode %d", mode);
+	if (mode <= 2)
+	{
+		smt50_log_moisture(1, "A0", ads_ch0_global);
+		smt50_log_temp(1, "A1", ads_ch1_global);
+		if (mode == 2)
+		{
+			smt50_log_moisture(2, "A2", ads_ch2_global);
+			smt50_log_temp(2, "A3", ads_ch3_global);
+		}
+	}
+	else
+	{
+		smt50_log_moisture(1, "A0", ads_ch0_global);
+		smt50_log_moisture(2, "A1", ads_ch1_global);
+		smt50_log_moisture(3, "A2", ads_ch2_global);
+		if (mode == 3)
+		{
+			smt50_log_temp(3, "A3", ads_ch3_global);
+		}
+		else if (mode == 6)
+		{
+			smt50_log_temp(1, "PA4", pa4);
+			smt50_log_temp(2, "PA8", pa8);
+			smt50_log_temp(3, "A3", ads_ch3_global);
+		}
+		else
+		{
+			smt50_log_moisture(4, "A3", ads_ch3_global);
+		}
+		if (mode == 5)
+		{
+			smt50_log_temp(1, "PA4", pa4);
+			smt50_log_temp(2, "PA8", pa8);
+		}
+	}
+}
 uint16_t fire_version=0;
 uint16_t fire_pro=0;
 uint8_t fdr_qsw=0;
@@ -650,6 +748,7 @@ void txPayLoadDeal(SENSOR* Sensor)
 		user_main_printf("ADS1115_ch1:%u mV", ads_ch1);
 		user_main_printf("ADS1115_ch2:%u mV", ads_ch2);
 		user_main_printf("ADS1115_ch3:%u mV", ads_ch3);
+		SMT50_LogDefault();
 
 		sprintf(Sensor->data+strlen(Sensor->data), "%.4x", Sensor->adc1);
 		sprintf(Sensor->data+strlen(Sensor->data), "%.4x", Sensor->adc2);
@@ -1670,6 +1769,7 @@ void get_sensorvalue(void)
 		user_main_printf("ADS1115_ch1:%u mV", ads_ch1);
 		user_main_printf("ADS1115_ch2:%u mV", ads_ch2);
 		user_main_printf("ADS1115_ch3:%u mV", ads_ch3);
+		SMT50_LogDefault();
 	}
   HAL_GPIO_WritePin(Power_5v_GPIO_Port, Power_5v_Pin, GPIO_PIN_SET);
 }
